@@ -1,0 +1,39 @@
+name: Anonymized failure case
+description: Contribute a false positive, false negative, bad cluster, or provenance mistake.
+title: "[Eval]: "
+labels: ["benchmark", "good-first-issue"]
+body:
+  - type: dropdown
+    id: failure
+    attributes:
+      label: Failure type
+      options:
+        - False positive
+        - False negative
+        - Incorrect clustering
+        - Incorrect source independence
+        - Confirmation/denial conflict
+        - Incorrect watchlist relevance
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Minimal fictional or anonymized fixture
+      description: Provide valid event JSON and the expected card state.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: reasoning
+    attributes:
+      label: Why the current result is wrong
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: This case contains no secret, private holding, paid content dump, or personal data.
+          required: true

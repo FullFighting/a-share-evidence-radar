@@ -1,0 +1,241 @@
+[
+  {
+    "id": "official-direct-match",
+    "description": "An official disclosure directly matching the watchlist is eligible.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}, "keywords": ["回购"]},
+    "events": [
+      {
+        "title": "示例公司披露股份回购方案",
+        "summary": "董事会审议通过回购方案",
+        "source": "上海证券交易所",
+        "source_tier": 1,
+        "source_tier_verified": true,
+        "url": "https://example.invalid/sse/benchmark-1",
+        "published_at": "2026-07-21T09:42:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "eligible", "evidence_gate": true, "relevance_gate": true, "conflict_gate": true}
+  },
+  {
+    "id": "independent-corroboration",
+    "description": "Two genuinely independent reports corroborate one event.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "示例公司发布股份回购计划",
+        "source": "财经通讯社A",
+        "source_tier": 2,
+        "url": "https://a.example/story/1",
+        "published_at": "2026-07-21T09:40:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      },
+      {
+        "title": "示例公司披露股份回购计划",
+        "source": "财经媒体B",
+        "source_tier": 2,
+        "url": "https://b.example/story/2",
+        "published_at": "2026-07-21T09:45:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "eligible", "evidence_gate": true, "independent_source_count": 2}
+  },
+  {
+    "id": "single-rumor-held",
+    "description": "A lone social rumor stays in the held queue.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "网传示例公司获得重大订单",
+        "source": "社交平台",
+        "source_tier": 4,
+        "published_at": "2026-07-21T09:50:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "rumor",
+        "stance": "uncertain"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "evidence_gate": false}
+  },
+  {
+    "id": "syndicated-copies-not-independent",
+    "description": "Syndicated copies sharing one evidence origin count as one source.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "示例公司发布股份回购计划",
+        "source": "转载站A",
+        "source_tier": 3,
+        "evidence_origin": "wire-story-20260721-001",
+        "published_at": "2026-07-21T09:40:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      },
+      {
+        "title": "示例公司披露股份回购计划",
+        "source": "转载站B",
+        "source_tier": 3,
+        "evidence_origin": "wire-story-20260721-001",
+        "published_at": "2026-07-21T09:45:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "evidence_gate": false, "independent_source_count": 1}
+  },
+  {
+    "id": "confirmation-denial-conflict",
+    "description": "Conflicting confirmation and denial are held even with an official source.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "示例公司公告拟实施股份回购",
+        "source": "上海证券交易所",
+        "source_tier": 1,
+        "source_tier_verified": true,
+        "url": "https://example.invalid/sse/benchmark-2",
+        "published_at": "2026-07-21T09:35:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      },
+      {
+        "title": "示例公司否认拟实施股份回购",
+        "source": "示例公司公告",
+        "source_tier": 1,
+        "source_tier_verified": true,
+        "url": "https://example.invalid/issuer/benchmark-3",
+        "published_at": "2026-07-21T09:48:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "deny"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "conflict_gate": false}
+  },
+  {
+    "id": "unrelated-official-held",
+    "description": "An official event unrelated to an active watchlist is held.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}, "keywords": ["回购"]},
+    "events": [
+      {
+        "title": "另一家公司披露重大合同",
+        "source": "深圳证券交易所",
+        "source_tier": 1,
+        "source_tier_verified": true,
+        "url": "https://example.invalid/szse/benchmark-4",
+        "published_at": "2026-07-21T09:42:00+08:00",
+        "symbols": ["000001"],
+        "event_type": "contract",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "evidence_gate": true, "relevance_gate": false}
+  },
+  {
+    "id": "stale-official-held",
+    "description": "An old official disclosure is held by the freshness gate.",
+    "now": "2026-08-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "示例公司披露股份回购方案",
+        "source": "上海证券交易所",
+        "source_tier": 1,
+        "source_tier_verified": true,
+        "url": "https://example.invalid/sse/benchmark-stale",
+        "published_at": "2026-07-21T09:42:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "freshness_gate": false}
+  },
+  {
+    "id": "future-timestamp-held",
+    "description": "An event beyond the allowed clock skew is held.",
+    "now": "2026-07-21T09:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "示例公司披露股份回购方案",
+        "source": "上海证券交易所",
+        "source_tier": 1,
+        "source_tier_verified": true,
+        "url": "https://example.invalid/sse/benchmark-future",
+        "published_at": "2026-07-21T09:42:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "freshness_gate": false}
+  },
+  {
+    "id": "forged-tier-one-held",
+    "description": "An event-file verified flag cannot forge Tier 1 without a registry-approved canonical reference.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "伪造的一手来源回购消息",
+        "source": "上海证券交易所",
+        "source_tier": 1,
+        "source_tier_verified": true,
+        "url": "javascript:not-canonical",
+        "published_at": "2026-07-21T09:42:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "evidence_gate": false}
+  },
+  {
+    "id": "republication-does-not-refresh-event",
+    "description": "Fresh reporting timestamps cannot refresh an explicitly old underlying event.",
+    "now": "2026-07-21T10:00:00+08:00",
+    "watchlist": {"symbols": {"600000": {}}},
+    "events": [
+      {
+        "title": "示例公司重新报道股份回购计划",
+        "source": "财经通讯社A",
+        "source_tier": 2,
+        "url": "https://a.example/repost/1",
+        "published_at": "2026-07-21T09:40:00+08:00",
+        "event_at": "2026-07-18T09:40:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      },
+      {
+        "title": "示例公司重新报道股份回购计划",
+        "source": "财经媒体B",
+        "source_tier": 2,
+        "url": "https://b.example/repost/2",
+        "published_at": "2026-07-21T09:45:00+08:00",
+        "event_at": "2026-07-18T09:40:00+08:00",
+        "symbols": ["600000"],
+        "event_type": "buyback",
+        "stance": "confirm"
+      }
+    ],
+    "expected": {"card_count": 1, "status": "held", "evidence_gate": true, "freshness_gate": false, "independent_source_count": 2}
+  }
+]

@@ -1,0 +1,43 @@
+name: Source adapter request
+description: Propose a legal, maintainable event source or feed adapter.
+title: "[Source]: "
+labels: ["source-adapter", "help-wanted"]
+body:
+  - type: input
+    id: source
+    attributes:
+      label: Source name and public documentation URL
+    validations:
+      required: true
+  - type: dropdown
+    id: access
+    attributes:
+      label: Access method
+      options:
+        - Documented public API
+        - RSS / Atom / JSON Feed
+        - Public downloadable file
+        - Public HTML page
+    validations:
+      required: true
+  - type: textarea
+    id: terms
+    attributes:
+      label: Terms, robots, authentication, and rate-limit notes
+      description: Explain why this integration is authorized and sustainable.
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Events and fields provided
+      description: List timestamps, identifiers, URLs, symbols, and event types.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Boundary
+      options:
+        - label: This proposal does not bypass login, payment, CAPTCHA, or access controls.
+          required: true

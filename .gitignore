@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.test-tmp/
+tests/.runtime/*
+!tests/.runtime/.gitkeep
+.validation-deps/
+.coverage
+.env
+radar-state.json
+alerts.md
+collected-events.jsonl
+*.log
+.DS_Store
+Thumbs.db

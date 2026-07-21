@@ -1,0 +1,16 @@
+{
+  "feeds": [
+    {
+      "location": "feed.xml"
+    }
+  ],
+  "watchlist": "watchlist.json",
+  "source_registry": "source-registry.json",
+  "now": "2026-07-21T10:00:00+08:00",
+  "format": "markdown",
+  "include_held": true,
+  "min_score": 60,
+  "max_age_minutes": 1440,
+  "max_future_skew_minutes": 5,
+  "cooldown_minutes": 360
+}

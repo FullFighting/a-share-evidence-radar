@@ -1,0 +1,34 @@
+{
+  "name": "a-share-evidence-radar",
+  "version": "0.2.0",
+  "description": "Evidence-first, low-noise A-share event monitoring for Codex",
+  "author": {
+    "name": "A-share Evidence Radar Contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "a-share",
+    "stock-alerts",
+    "evidence",
+    "event-monitoring",
+    "codex-skill"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "A股证据链事件雷达",
+    "shortDescription": "将公告、新闻和行情反应融合成低噪声证据卡",
+    "longDescription": "使用来源独立性、事件聚类、四道质量门和冷却去重，生成可核验、可解释且默认只预览的 A 股事件提醒。",
+    "developerName": "A-share Evidence Radar Contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Analysis",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "监控我的 A 股自选股，合并公告、新闻和行情反应，先生成证据卡预览，不要发送。",
+      "检查这些 A 股事件是否满足证据、相关性、冲突和时效门槛。"
+    ],
+    "composerIcon": "./skills/monitor-a-share-events/assets/radar.svg",
+    "brandColor": "#102A43"
+  }
+}

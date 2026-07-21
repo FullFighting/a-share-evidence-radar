@@ -1,0 +1,36 @@
+{
+  "sources": {
+    "示例交易所公告": {
+      "tier": 1,
+      "hosts": [
+        "example.invalid"
+      ],
+      "allow_local": true,
+      "note": "Fictional source used only for the bundled offline fixture"
+    },
+    "上海证券交易所": {
+      "tier": 1,
+      "hosts": [
+        "example.invalid"
+      ],
+      "allow_local": true,
+      "note": "Fictional benchmark mapping; replace the host in real deployments"
+    },
+    "深圳证券交易所": {
+      "tier": 1,
+      "hosts": [
+        "example.invalid"
+      ],
+      "allow_local": true,
+      "note": "Fictional benchmark mapping; replace the host in real deployments"
+    },
+    "示例公司公告": {
+      "tier": 1,
+      "hosts": [
+        "example.invalid"
+      ],
+      "allow_local": true,
+      "note": "Fictional benchmark issuer source"
+    }
+  }
+}

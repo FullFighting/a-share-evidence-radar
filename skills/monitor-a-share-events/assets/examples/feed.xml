@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>示例交易所公告</title>
+    <link>https://example.invalid/disclosures</link>
+    <description>用于离线演示的虚构订阅源</description>
+    <item>
+      <guid>announcement-20260721-001</guid>
+      <title>示例公司披露股份回购方案</title>
+      <link>https://example.invalid/announcement/1</link>
+      <description>示例公司董事会审议通过回购方案。</description>
+      <pubDate>Tue, 21 Jul 2026 01:42:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
