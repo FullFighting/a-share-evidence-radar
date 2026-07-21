@@ -26,7 +26,7 @@ python skills/monitor-a-share-events/scripts/evaluate_radar.py
 python skills/monitor-a-share-events/scripts/doctor.py
 ```
 
-6. Update both `README.md` and `README_EN.md` when user-facing behavior changes.
+6. Update both `README.md` and `README_ZH.md` when user-facing behavior changes.
 
 ## Adapter contract
 
