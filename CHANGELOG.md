@@ -21,3 +21,4 @@ All notable changes will be documented in this file.
 
 - Added a stronger bilingual README first screen, visual event-card preview, and 1280×640 social-preview asset.
 - Fixed Windows CI subprocess decoding by explicitly reading UTF-8 output.
+- Updated official GitHub Actions to their current Node 24-based major versions.
