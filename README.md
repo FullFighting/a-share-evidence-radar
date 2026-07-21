@@ -10,7 +10,17 @@
   <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
   <img alt="Standard library only" src="https://img.shields.io/badge/runtime-zero_dependencies-16a085">
   <img alt="Codex Skill" src="https://img.shields.io/badge/Codex-Agent_Skill-111827">
+  <a href="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml"><img alt="CI" src="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml/badge.svg"></a>
+  <img alt="Public benchmark" src="https://img.shields.io/badge/benchmark-10%2F10-2ea44f">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green">
+</p>
+
+<p align="center">
+  <a href="#30-秒离线体验">30 秒体验</a> ·
+  <a href="#安装为-codex-skill">安装</a> ·
+  <a href="#工作流">工作流</a> ·
+  <a href="#公开评测与质量承诺">公开评测</a> ·
+  <a href="CONTRIBUTING.md">参与贡献</a>
 </p>
 
 # A股证据链事件雷达
@@ -18,6 +28,14 @@
 把公告、监管披露、财经新闻与盘中异动融合成一张有来源、有反证、有推送理由的事件卡。它解决的不是“消息不够多”，而是**重复转载、传闻混入、因果乱配和自选股噪声太多**。
 
 > 注册表验证的一手来源或双重独立印证 → 自选股相关 → 无可信冲突 → 时间有效 → 才有资格推送。
+
+## 一眼看懂输出
+
+<p align="center">
+  <img src="docs/assets/event-card.svg" alt="A股证据链事件卡示例：评分、四道质量门与一手证据" width="100%">
+</p>
+
+一张事件卡同时回答五个问题：**发生了什么、影响谁、证据来自哪里、为什么值得提醒、什么情况会推翻判断**。默认只生成脱敏预览，不会因为标题命中就向外发送。
 
 ## 为什么值得用
 

@@ -4,10 +4,10 @@
 
 ## 仓库元数据
 
-- 建议仓库名：`a-share-evidence-radar`
+- 仓库名：`a-share-evidence-radar`（已完成）
 - 建议描述：`Evidence-first A-share event radar for Codex — cluster disclosures, news and market reactions into low-noise alerts.`
 - 建议 Topics：`a-share`、`china-stock`、`event-monitoring`、`stock-alerts`、`rss`、`python`、`codex`、`agent-skills`、`webhook`、`fintech`
-- 将 `docs/assets/hero.svg` 导出为 1280×640 PNG，并在 Settings → Social preview 上传。GitHub 推荐至少 640×320，1280×640 显示最佳。
+- 在 Settings → Social preview 上传已经生成的 `docs/assets/social-preview.png`（1280×640）。
 - 开启 Issues、Discussions 和 Private vulnerability reporting。
 
 参考：[GitHub 社交预览说明](https://docs.github.com/en/enterprise-cloud@latest/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview)。

@@ -6,6 +6,14 @@
   English · <a href="README.md">中文</a>
 </p>
 
+<p align="center">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/runtime-zero_dependencies-16a085">
+  <a href="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml"><img alt="CI" src="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml/badge.svg"></a>
+  <img alt="Public benchmark" src="https://img.shields.io/badge/benchmark-10%2F10-2ea44f">
+  <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-green">
+</p>
+
 # A-share Evidence Radar
 
 An evidence-first Codex Skill that turns company disclosures, regulator updates, financial news, and observed market reactions into low-noise, auditable alert cards.
@@ -13,6 +21,14 @@ An evidence-first Codex Skill that turns company disclosures, regulator updates,
 > Registry-verified primary evidence or two independent sources → watchlist relevance → no credible contradiction → fresh timestamp → alert eligibility.
 
 It is not another headline forwarder. The radar clusters duplicate coverage, prevents syndicated copies from masquerading as independent confirmation, separates price reaction from causal claims, and defaults to a redacted delivery preview.
+
+## What an alert looks like
+
+<p align="center">
+  <img src="docs/assets/event-card.svg" alt="Evidence Radar event card with score, four quality gates, and primary evidence" width="100%">
+</p>
+
+Each card answers five questions: **what happened, who is affected, where the evidence came from, why the alert matters, and what could invalidate it**. A headline match alone never triggers an external send.
 
 ## What makes it different
 

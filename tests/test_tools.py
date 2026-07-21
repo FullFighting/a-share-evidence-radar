@@ -52,7 +52,9 @@ class ToolTests(unittest.TestCase):
             command.extend(["--watchlist", str(watchlist_path)])
         if extra:
             command.extend(extra)
-        result = subprocess.run(command, capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            command, capture_output=True, text=True, encoding="utf-8", check=False
+        )
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
@@ -334,9 +336,11 @@ class ToolTests(unittest.TestCase):
             "--format",
             "json",
         ]
-        first = subprocess.run(base + ["--commit-state"], capture_output=True, text=True)
+        first = subprocess.run(
+            base + ["--commit-state"], capture_output=True, text=True, encoding="utf-8"
+        )
         self.assertEqual(first.returncode, 0, first.stderr)
-        second = subprocess.run(base, capture_output=True, text=True)
+        second = subprocess.run(base, capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(second.returncode, 0, second.stderr)
         output = json.loads(second.stdout)
         self.assertEqual(output["summary"]["suppressed"], 1)
@@ -361,6 +365,7 @@ class ToolTests(unittest.TestCase):
             ],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             env=environment,
             check=False,
         )
@@ -389,6 +394,7 @@ class ToolTests(unittest.TestCase):
             ],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             env=environment,
             check=False,
         )
@@ -413,6 +419,7 @@ class ToolTests(unittest.TestCase):
             ],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -439,6 +446,7 @@ class ToolTests(unittest.TestCase):
             [sys.executable, "-X", "utf8", str(COLLECT), "--feed", str(feed)],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -496,6 +504,7 @@ class ToolTests(unittest.TestCase):
             [sys.executable, "-X", "utf8", str(COLLECT), "--feed", str(feed)],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -505,7 +514,9 @@ class ToolTests(unittest.TestCase):
 
     def test_public_benchmark_and_doctor_pass(self):
         for command in ([sys.executable, str(EVALUATE)], [sys.executable, str(DOCTOR)]):
-            result = subprocess.run(command, capture_output=True, text=True, check=False)
+            result = subprocess.run(
+                command, capture_output=True, text=True, encoding="utf-8", check=False
+            )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
 
     def test_one_command_pipeline_uses_self_contained_config(self):
@@ -520,6 +531,7 @@ class ToolTests(unittest.TestCase):
             ],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
