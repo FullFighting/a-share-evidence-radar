@@ -34,15 +34,15 @@
   </g>
   <g font-family="Inter, Segoe UI, Microsoft YaHei, sans-serif">
     <text x="74" y="104" fill="#8bf2a7" font-size="18" font-weight="700" letter-spacing="3">EVIDENCE FIRST · LOW NOISE</text>
-    <text x="72" y="171" fill="#ffffff" font-size="52" font-weight="750">A股证据链事件雷达</text>
-    <text x="74" y="220" fill="#d2e7f7" font-size="24">融合公告、新闻与行情反应，推送可核验的事件，而不是更多标题</text>
+    <text x="72" y="171" fill="#ffffff" font-size="52" font-weight="750">A-share Evidence Radar</text>
+    <text x="74" y="220" fill="#d2e7f7" font-size="23">Auditable event cards from disclosures, news, and market reactions</text>
     <g transform="translate(74 260)">
       <rect width="150" height="42" rx="21" fill="#45d6c1" opacity="0.16"/>
-      <text x="75" y="28" fill="#9ff5e7" font-size="16" font-weight="650" text-anchor="middle">4 道质量门</text>
+      <text x="75" y="28" fill="#9ff5e7" font-size="15" font-weight="650" text-anchor="middle">4 QUALITY GATES</text>
       <rect x="164" width="156" height="42" rx="21" fill="#71b7ff" opacity="0.14"/>
-      <text x="242" y="28" fill="#b9dcff" font-size="16" font-weight="650" text-anchor="middle">公开评测集</text>
+      <text x="242" y="28" fill="#b9dcff" font-size="15" font-weight="650" text-anchor="middle">PUBLIC BENCHMARK</text>
       <rect x="334" width="178" height="42" rx="21" fill="#8bf2a7" opacity="0.13"/>
-      <text x="423" y="28" fill="#c3ffd0" font-size="16" font-weight="650" text-anchor="middle">Python 零依赖</text>
+      <text x="423" y="28" fill="#c3ffd0" font-size="15" font-weight="650" text-anchor="middle">ZERO DEPENDENCIES</text>
     </g>
   </g>
 </svg>

@@ -22,8 +22,8 @@
   <g transform="translate(70 48)" font-family="Inter, Segoe UI, Microsoft YaHei, sans-serif">
     <rect width="1060" height="424" rx="24" fill="#0d2033" stroke="#2c5264" filter="url(#shadow)"/>
     <rect width="9" height="424" rx="4.5" fill="url(#accent)"/>
-    <text x="48" y="56" fill="#8bf2a7" font-size="15" font-weight="700" letter-spacing="2">PUSH-ELIGIBLE EVENT · 可核验证据卡</text>
-    <text x="48" y="110" fill="#fff" font-size="34" font-weight="750">示例公司披露股份回购方案</text>
+    <text x="48" y="56" fill="#8bf2a7" font-size="15" font-weight="700" letter-spacing="2">PUSH-ELIGIBLE · AUDITABLE EVENT CARD</text>
+    <text x="48" y="110" fill="#fff" font-size="34" font-weight="750">Example Co. discloses a share buyback plan</text>
     <g transform="translate(840 36)">
       <rect width="164" height="82" rx="18" fill="#123c3c" stroke="#45d6c1"/>
       <text x="82" y="34" text-anchor="middle" fill="#a8fff0" font-size="15" font-weight="700">EVIDENCE SCORE</text>
@@ -39,21 +39,21 @@
       <g transform="translate(0 20)" font-size="15" font-weight="650">
         <rect width="220" height="62" rx="14" fill="#102f35" stroke="#2d756d"/>
         <circle cx="28" cy="31" r="11" fill="#45d6c1"/><path d="M22 31l4 4 8-10" fill="none" stroke="#08231f" stroke-width="3" stroke-linecap="round"/>
-        <text x="50" y="27" fill="#fff">Evidence verified</text><text x="50" y="46" fill="#7fb3aa" font-size="12">注册表验证的一手来源</text>
+        <text x="50" y="27" fill="#fff">Evidence verified</text><text x="50" y="46" fill="#7fb3aa" font-size="12">Registry-approved source</text>
         <rect x="232" width="220" height="62" rx="14" fill="#102f35" stroke="#2d756d"/>
         <circle cx="260" cy="31" r="11" fill="#45d6c1"/><path d="M254 31l4 4 8-10" fill="none" stroke="#08231f" stroke-width="3" stroke-linecap="round"/>
-        <text x="282" y="27" fill="#fff">Watchlist matched</text><text x="282" y="46" fill="#7fb3aa" font-size="12">自选股与关键词命中</text>
+        <text x="282" y="27" fill="#fff">Watchlist matched</text><text x="282" y="46" fill="#7fb3aa" font-size="12">Symbol and keyword hit</text>
         <rect x="464" width="220" height="62" rx="14" fill="#102f35" stroke="#2d756d"/>
         <circle cx="492" cy="31" r="11" fill="#45d6c1"/><path d="M486 31l4 4 8-10" fill="none" stroke="#08231f" stroke-width="3" stroke-linecap="round"/>
-        <text x="514" y="27" fill="#fff">Conflict clear</text><text x="514" y="46" fill="#7fb3aa" font-size="12">无可信确认—否认冲突</text>
+        <text x="514" y="27" fill="#fff">Conflict clear</text><text x="514" y="46" fill="#7fb3aa" font-size="12">No credible contradiction</text>
         <rect x="696" width="220" height="62" rx="14" fill="#102f35" stroke="#2d756d"/>
         <circle cx="724" cy="31" r="11" fill="#45d6c1"/><path d="M718 31l4 4 8-10" fill="none" stroke="#08231f" stroke-width="3" stroke-linecap="round"/>
-        <text x="746" y="27" fill="#fff">Freshness valid</text><text x="746" y="46" fill="#7fb3aa" font-size="12">旧闻重发不会刷新时效</text>
+        <text x="746" y="27" fill="#fff">Freshness valid</text><text x="746" y="46" fill="#7fb3aa" font-size="12">Reposts cannot refresh news</text>
       </g>
     </g>
     <g transform="translate(48 324)">
       <text fill="#8faec3" font-size="14" font-weight="700" letter-spacing="1.5">PRIMARY EVIDENCE</text>
-      <text y="32" fill="#e8f5ff" font-size="16">Tier 1 · 示例交易所公告 · 董事会审议通过回购方案</text>
+      <text y="32" fill="#e8f5ff" font-size="16">Tier 1 · Example exchange disclosure · Board-approved buyback plan</text>
       <text y="59" fill="#76b8dc" font-size="14">Canonical source → explainable score → preview before delivery</text>
     </g>
     <text x="1004" y="392" text-anchor="end" fill="#5f8298" font-size="13">INFORMATION TRIAGE · NOT INVESTMENT ADVICE</text>

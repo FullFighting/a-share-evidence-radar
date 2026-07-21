@@ -20,5 +20,6 @@ All notable changes will be documented in this file.
 ### Changed
 
 - Added a stronger bilingual README first screen, visual event-card preview, and 1280×640 social-preview asset.
+- Made the English README the default GitHub landing page and preserved Chinese as `README_ZH.md`.
 - Fixed Windows CI subprocess decoding by explicitly reading UTF-8 output.
 - Updated official GitHub Actions to their current Node 24-based major versions.
