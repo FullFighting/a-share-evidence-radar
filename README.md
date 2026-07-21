@@ -51,6 +51,9 @@ On Windows, if `python` opens the Microsoft Store, install Python 3.10+ and repl
 ```bash
 python skills/monitor-a-share-events/scripts/doctor.py
 
+python skills/monitor-a-share-events/scripts/validate_config.py \
+  --config skills/monitor-a-share-events/assets/examples/radar-config.json
+
 python skills/monitor-a-share-events/scripts/run_radar.py \
   --config skills/monitor-a-share-events/assets/examples/radar-config.json
 
@@ -58,6 +61,8 @@ python skills/monitor-a-share-events/scripts/evaluate_radar.py
 ```
 
 Expected results: `READY` from the doctor and `10/10 (100.0%)` from the public benchmark. All bundled events are fictional and safe to reproduce.
+
+The config validator performs no network request. Run it before using a real feed; it checks local paths, parameter ranges, source-registry shape, and credential-like values accidentally placed in JSON.
 
 ## Install as a Codex Skill
 
@@ -110,6 +115,10 @@ python skills/monitor-a-share-events/scripts/evaluate_radar.py
 ```
 
 The benchmark score describes only the published cases, not real-market accuracy. The most valuable contributions are anonymized failures, source adapters, clustering counterexamples, provenance labels, and secure notification channels. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md) before contributing.
+
+## Early beta
+
+We are looking for five real testers who maintain Codex workflows, research A-share public information, or build feed/event integrations. The test takes about 15 minutes, is offline by default, and must not include private holdings or credentials. See the [beta guide](docs/beta-testing.md) and use the structured **Beta feedback** Issue form.
 
 ## Roadmap
 

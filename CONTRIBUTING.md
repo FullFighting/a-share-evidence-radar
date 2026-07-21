@@ -22,6 +22,7 @@ Please do not add scrapers that bypass login, payment, CAPTCHA, robots rules, or
 
 ```bash
 python -m unittest discover -s tests -v
+python skills/monitor-a-share-events/scripts/validate_config.py --config skills/monitor-a-share-events/assets/examples/radar-config.json
 python skills/monitor-a-share-events/scripts/evaluate_radar.py
 python skills/monitor-a-share-events/scripts/doctor.py
 ```

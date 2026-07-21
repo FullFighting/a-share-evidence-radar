@@ -27,6 +27,16 @@ def load_fuse_module():
     return module
 
 
+def load_config_validator():
+    path = SKILL_ROOT / "scripts" / "validate_config.py"
+    spec = importlib.util.spec_from_file_location("evidence_radar_config_validator", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("could not load validate_config.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def check(name: str, ok: bool, detail: str) -> dict[str, Any]:
     return {"name": name, "status": "pass" if ok else "fail", "detail": detail}
 
@@ -34,6 +44,10 @@ def check(name: str, ok: bool, detail: str) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Offline configuration and smoke-test check.")
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument(
+        "--config",
+        help="Optionally validate a user config without fetching remote feeds",
+    )
     args = parser.parse_args()
     checks: list[dict[str, Any]] = []
     checks.append(
@@ -73,6 +87,20 @@ def main() -> int:
         checks.append(check("offline_smoke_test", eligible >= 1, f"{len(cards)} cards, {eligible} eligible"))
     except Exception as exc:  # Keep doctor useful even when an unexpected import error occurs.
         checks.append(check("offline_smoke_test", False, str(exc)))
+    if args.config:
+        try:
+            validator = load_config_validator()
+            config_checks = validator.validate_config(Path(args.config).resolve())
+            checks.extend(
+                {
+                    "name": f"config.{item['name']}",
+                    "status": item["status"],
+                    "detail": item["detail"],
+                }
+                for item in config_checks
+            )
+        except Exception as exc:
+            checks.append(check("config", False, str(exc)))
     notification_env = {
         "feishu": "FEISHU_WEBHOOK_URL",
         "dingtalk": "DINGTALK_WEBHOOK_URL",
@@ -97,7 +125,12 @@ def main() -> int:
         print(json.dumps({"ready": ok, "checks": checks}, ensure_ascii=False, indent=2))
     else:
         for item in checks:
-            marker = {"pass": "[PASS]", "fail": "[FAIL]", "info": "[INFO]"}[item["status"]]
+            marker = {
+                "pass": "[PASS]",
+                "warn": "[WARN]",
+                "fail": "[FAIL]",
+                "info": "[INFO]",
+            }[item["status"]]
             print(f"{marker} {item['name']}: {item['detail']}")
         print("READY" if ok else "NOT READY")
     return 0 if ok else 1

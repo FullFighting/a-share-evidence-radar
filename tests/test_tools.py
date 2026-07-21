@@ -15,6 +15,7 @@ COLLECT = SKILL / "scripts" / "collect_feeds.py"
 EVALUATE = SKILL / "scripts" / "evaluate_radar.py"
 DOCTOR = SKILL / "scripts" / "doctor.py"
 RUN = SKILL / "scripts" / "run_radar.py"
+VALIDATE = SKILL / "scripts" / "validate_config.py"
 RUNTIME = ROOT / "tests" / ".runtime"
 
 
@@ -518,6 +519,118 @@ class ToolTests(unittest.TestCase):
                 command, capture_output=True, text=True, encoding="utf-8", check=False
             )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+
+    def test_example_config_passes_offline_validation(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-X",
+                "utf8",
+                str(VALIDATE),
+                "--config",
+                str(SKILL / "assets" / "examples" / "radar-config.json"),
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        output = json.loads(result.stdout)
+        self.assertTrue(output["ready"])
+        self.assertFalse(any(item["status"] == "fail" for item in output["checks"]))
+
+    def test_config_validation_rejects_inline_notification_secret(self):
+        config = json.loads(
+            (SKILL / "assets" / "examples" / "radar-config.json").read_text(encoding="utf-8")
+        )
+        config["feeds"][0]["location"] = str(SKILL / "assets" / "examples" / "feed.xml")
+        config["watchlist"] = str(SKILL / "assets" / "examples" / "watchlist.json")
+        config["source_registry"] = str(
+            SKILL / "assets" / "examples" / "source-registry.json"
+        )
+        config["notification"] = {
+            "channel": "feishu",
+            "webhook_url": "https://example.invalid/private-hook",
+        }
+        config_path = self.runtime_path("unsafe-config.json")
+        config_path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(VALIDATE), "--config", str(config_path), "--format", "json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        output = json.loads(result.stdout)
+        inline = next(item for item in output["checks"] if item["name"] == "inline_secrets")
+        self.assertEqual(inline["status"], "fail")
+        self.assertIn("config.notification.webhook_url", inline["detail"])
+        self.assertNotIn("private-hook", result.stdout)
+
+    def test_config_validation_accepts_absolute_windows_paths(self):
+        config = {
+            "feeds": [{"location": str(SKILL / "assets" / "examples" / "feed.xml")}],
+            "watchlist": str(SKILL / "assets" / "examples" / "watchlist.json"),
+            "source_registry": str(SKILL / "assets" / "examples" / "source-registry.json"),
+            "output": str(self.runtime_path("report.md")),
+        }
+        config_path = self.runtime_path("absolute-path-config.json")
+        config_path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(VALIDATE), "--config", str(config_path), "--format", "json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        output = json.loads(result.stdout)
+        feed = next(item for item in output["checks"] if item["name"] == "feed[1]")
+        self.assertEqual(feed["status"], "pass")
+
+    def test_config_validation_reports_missing_local_feed(self):
+        config = {
+            "feeds": [{"location": "missing-feed.xml"}],
+            "format": "markdown",
+        }
+        config_path = self.runtime_path("missing-feed-config.json")
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(VALIDATE), "--config", str(config_path), "--format", "json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        output = json.loads(result.stdout)
+        feed = next(item for item in output["checks"] if item["name"] == "feed[1]")
+        self.assertEqual(feed["status"], "fail")
+        self.assertIn("local file not found", feed["detail"])
+
+    def test_doctor_can_validate_user_config_without_network(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(DOCTOR),
+                "--config",
+                str(SKILL / "assets" / "examples" / "radar-config.json"),
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        output = json.loads(result.stdout)
+        self.assertTrue(output["ready"])
+        self.assertTrue(any(item["name"] == "config.feed[1]" for item in output["checks"]))
 
     def test_one_command_pipeline_uses_self_contained_config(self):
         result = subprocess.run(

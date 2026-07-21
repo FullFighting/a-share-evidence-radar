@@ -6,6 +6,14 @@ All notable changes will be documented in this file.
 
 ### Added
 
+- Offline user-config validation for paths, parameter ranges, registry shape, notification channels, and credential-like values.
+- `doctor.py --config` support and five configuration-safety regression tests.
+- A structured early-beta guide and GitHub feedback form for reproducible first-run reports.
+
+## 0.2.0
+
+### Added
+
 - Evidence-first Codex Skill with deterministic event clustering and scoring.
 - Evidence, relevance, conflict, and freshness gates with auditable score breakdowns.
 - RSS, Atom, and JSON Feed collection with watchlist symbol mapping.

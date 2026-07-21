@@ -181,6 +181,12 @@ def main() -> int:
     args = parse_args()
     try:
         config_path = Path(args.config).resolve()
+        validator = load_module("evidence_radar_config_validator", "validate_config.py")
+        validation = validator.validate_config(config_path)
+        failures = [item for item in validation if item["status"] == "fail"]
+        if failures:
+            details = "; ".join(f"{item['name']}: {item['detail']}" for item in failures)
+            raise ValueError(f"config validation failed: {details}")
         config = load_config(config_path)
         collect = load_module("evidence_radar_collect", "collect_feeds.py")
         fuse = load_module("evidence_radar_fuse", "fuse_events.py")
