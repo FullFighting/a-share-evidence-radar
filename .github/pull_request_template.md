@@ -9,6 +9,7 @@ Describe the smallest useful solution and any tradeoffs.
 ## Verification
 
 - [ ] `python -m unittest discover -s tests -v`
+- [ ] `python skills/monitor-a-share-events/scripts/validate_config.py --config skills/monitor-a-share-events/assets/examples/radar-config.json`
 - [ ] `python skills/monitor-a-share-events/scripts/evaluate_radar.py`
 - [ ] `python skills/monitor-a-share-events/scripts/doctor.py`
 - [ ] Behavior changes include a benchmark case.

@@ -20,6 +20,7 @@ Run before proposing changes:
 ```bash
 python -m py_compile skills/monitor-a-share-events/scripts/*.py
 python -m unittest discover -s tests -v
+python skills/monitor-a-share-events/scripts/validate_config.py --config skills/monitor-a-share-events/assets/examples/radar-config.json
 ```
 
 When the Codex `skill-creator` package is available, also run its `quick_validate.py` against `skills/monitor-a-share-events/`.

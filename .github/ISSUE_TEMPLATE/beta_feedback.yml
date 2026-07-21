@@ -1,0 +1,54 @@
+name: Beta feedback
+description: Share first-run experience without exposing holdings, credentials, or paid content.
+title: "[Beta]: "
+labels: ["beta", "feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for testing. Use fictional or anonymized data and keep every credential private.
+  - type: dropdown
+    id: role
+    attributes:
+      label: Closest workflow
+      options:
+        - Codex Skill or agent workflow maintainer
+        - A-share public-information researcher
+        - RSS, feed, or event-data integrator
+        - Security or privacy reviewer
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Windows 11, Python 3.12, Codex desktop
+    validations:
+      required: true
+  - type: input
+    id: time_to_demo
+    attributes:
+      label: Time to first successful offline card
+      placeholder: 6 minutes, or not completed
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What worked and what stopped you?
+      description: Include the first confusing step, expected result, and actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: One improvement that would make you use it again
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I included no credentials, cookies, private holdings, paid content, or personal data.
+          required: true

@@ -1,6 +1,6 @@
 ---
 name: monitor-a-share-events
-description: Monitor A-share watchlists with evidence-first, low-noise event alerts. Use for company announcements, exchange or regulator disclosures, financial news, and observed price anomalies that need source-aware clustering, evidence/relevance/conflict/freshness gates, explainable scoring, cooldown deduplication, or safe Feishu/DingTalk/WeCom/Telegram/Bark/Webhook delivery. Do not use for autonomous trading or unsupported buy/sell calls.
+description: Monitor A-share watchlists with evidence-first, low-noise event alerts. Use for company announcements, exchange or regulator disclosures, financial news, and observed price anomalies that need source-aware clustering, evidence/relevance/conflict/freshness gates, explainable scoring, configuration diagnosis, cooldown deduplication, safe Feishu/DingTalk/WeCom/Telegram/Bark/Webhook delivery, or reproducible false-positive and false-negative feedback. Do not use for autonomous trading or unsupported buy/sell calls.
 ---
 
 # A-share evidence radar
@@ -14,29 +14,33 @@ Resolve `SKILL_ROOT` as the directory containing this `SKILL.md`. Resolve bundle
 1. Establish scope.
    - Resolve the watchlist, sectors, keywords, desired latency, quiet hours, and notification channels.
    - If details are absent, default to a preview-only run for a small supplied watchlist. Do not invent holdings.
-2. Plan sources.
+2. Validate configuration before network access.
+   - Run `scripts/validate_config.py --config <config>` for an offline check of paths, parameter ranges, source-registry shape, and accidentally embedded credentials.
+   - Fix every failure before collecting. Review warnings instead of silently ignoring them.
+   - Keep webhook URLs, bot tokens, chat IDs, cookies, and API keys in environment variables, never in the config.
+3. Plan sources.
    - Read [references/source-policy.md](references/source-policy.md) when selecting or evaluating sources.
    - Read [references/source-registry.md](references/source-registry.md) before granting a feed verified Tier 1 status.
    - Prefer issuer, exchange, regulator, and statutory-disclosure sources. Treat portals, social posts, and reposts as discovery leads.
    - Browse or query live sources for current monitoring tasks; never treat cached model knowledge as current market information.
-3. Normalize observations.
+4. Normalize observations.
    - Read [references/event-schema.md](references/event-schema.md) before creating input files or adapters.
    - Preserve timestamps, canonical URLs, source identity, source tier, affected symbols, and factual wording.
    - Separate facts from interpretation. Mark rumors and denials explicitly.
    - For RSS, Atom, or JSON Feed inputs, run `scripts/collect_feeds.py`. Treat its output as normalized observations, not verified facts.
-4. Fuse and score.
+5. Fuse and score.
    - Run `scripts/fuse_events.py` to cluster duplicates, apply the evidence gate, score relevance and materiality, and create alert cards.
    - Inspect held and suppressed counts. Do not lower the threshold merely to produce output.
    - Inspect `score_breakdown` and all four gates: evidence, relevance, conflict, and freshness.
-5. Verify important cards.
+6. Verify important cards.
    - Open the primary source for every critical card.
    - Confirm symbol, issuer, publication time, event type, and whether the news is new or a recycled report.
    - Add counterevidence or an invalidation condition when available.
-6. Preview before delivery.
+7. Preview before delivery.
    - Show the exact message body and target channel, but keep endpoints, tokens, chat IDs, and routing identifiers redacted.
    - Run `scripts/push_alert.py` without `--send` for a safe preview.
    - Send only after the user authorizes the external write. Never expose webhook URLs, bot tokens, chat IDs, or cookies.
-7. Schedule only on request.
+8. Schedule only on request.
    - Use the product's automation mechanism rather than inventing cron directives when automations are available.
    - Keep collection frequency within source terms and rate limits. Prefer conditional requests and incremental state.
 
@@ -103,13 +107,32 @@ For an explicit `https://` feed URL, respect its terms and polling limits. A com
 
 ## Diagnose and evaluate
 
-Run the offline readiness check before configuring a scheduled workflow:
+Validate a user config without fetching remote feeds:
 
 ```powershell
-python scripts/doctor.py
+python scripts/validate_config.py --config radar-config.json
+```
+
+Run the full offline readiness check before the first live or scheduled workflow:
+
+```powershell
+python scripts/doctor.py --config radar-config.json
 ```
 
 Run `scripts/evaluate_radar.py` against the public benchmark after changing clustering, evidence, relevance, conflict, or freshness rules. Do not claim quality improvements without adding a case that demonstrates them.
+
+## Turn real failures into public tests
+
+When a user reports a missed alert, noisy alert, bad cluster, provenance mistake, or false conflict:
+
+1. Reproduce the result locally before changing a rule.
+2. Replace private holdings, credentials, personal data, and licensed article text with fictional or explicitly anonymized values.
+3. Preserve only the minimum fields needed to demonstrate the failure, including timestamps and source independence.
+4. State the actual card state, expected card state, command, Python version, and why the expectation is safer.
+5. Add a benchmark case and a unit test before changing behavior.
+6. Offer to open the repository's anonymized failure-case Issue only when the user authorizes that external write.
+
+Never describe self-authored benchmark cases as real users, production accuracy, or market validation.
 
 ## Preview or send an alert
 

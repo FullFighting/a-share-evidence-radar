@@ -15,8 +15,8 @@
 
 - 标准 Codex 插件清单与独立 Skill 均通过官方结构校验；
 - Python 3.10+ 标准库实现，无第三方运行时依赖；
-- 21 个自动化测试覆盖 RSS/Atom/JSON Feed、Windows 路径、一键流程、转载指纹、旧闻重发、来源伪造、时效、聚类、冷却、完整脱敏和四道质量门；
-- 8 个公开行为基准覆盖权威公告、独立印证、传闻、转载、冲突、无关消息、旧闻和未来时间；
+- 26 个自动化测试覆盖 RSS/Atom/JSON Feed、配置离线验证、Windows 路径、一键流程、转载指纹、旧闻重发、来源伪造、时效、聚类、冷却、完整脱敏和四道质量门；
+- 10 个公开行为基准覆盖权威公告、独立印证、传闻、转载、冲突、无关消息、旧闻、未来时间、伪造来源和旧闻重发；
 - RSS、Atom、JSON Feed 采集器、离线 Doctor 和 6 类安全推送渠道；
 - 中英文 README、贡献规范、安全策略、Issue 模板和 Windows/Linux CI 矩阵。
 
@@ -34,7 +34,7 @@ A-share Evidence Radar is an open-source Codex Skill and plugin that turns fragm
 
 ### GitHub repository
 
-`https://github.com/<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY>`
+`https://github.com/FullFighting/a-share-evidence-radar`
 
 ### How would you use API credits for your project?
 
