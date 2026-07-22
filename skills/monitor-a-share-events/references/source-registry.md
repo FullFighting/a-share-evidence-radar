@@ -27,3 +27,5 @@ Rules:
 - Review registry changes like code. A contributor must explain the source owner, access method, terms, and why the tier is appropriate.
 
 Without a matching registry entry, `--source-tier` remains an operator assertion. The fusion stage does not trust `source_tier_verified` from an event file; it recomputes trust and downgrades an unverified Tier 1 claim to Tier 3.
+
+Use `assets/source-registry.official.json` with the bundled SSE and SZSE disclosure adapters. Keep it separate from `assets/examples/source-registry.json`, whose `example.invalid` entries exist only for fictional offline tests.

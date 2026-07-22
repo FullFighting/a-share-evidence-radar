@@ -6,7 +6,7 @@ Security fixes are applied to the latest commit on the default branch. Before th
 
 ## Reporting a vulnerability
 
-Do not publish webhook URLs, bot tokens, cookies, private watchlists, or a working exploit in a public Issue. After the GitHub repository is published, use GitHub's private vulnerability reporting feature if it is enabled. If it is not enabled, open a public Issue containing only a request for a private contact channel.
+Do not publish webhook URLs, bot tokens, cookies, private watchlists, or a working exploit in a public Issue. Use the repository's enabled GitHub private vulnerability reporting feature. If GitHub does not show that option, open a public Issue containing only a request for a private contact channel; do not include exploit or secret details.
 
 Include the affected file or workflow, impact, minimal reproduction, and suggested mitigation. Remove all live credentials and personal market data.
 

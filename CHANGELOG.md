@@ -2,13 +2,29 @@
 
 All notable changes will be documented in this file.
 
-## Unreleased
+## 0.3.0 - 2026-07-22
 
 ### Added
 
 - Offline user-config validation for paths, parameter ranges, registry shape, notification channels, and credential-like values.
 - `doctor.py --config` support and five configuration-safety regression tests.
 - A structured early-beta guide and GitHub feedback form for reproducible first-run reports.
+- Contract-tested SSE and SZSE primary-disclosure metadata adapters with valid and failed fixtures.
+- A standard-library HTTPS client with public-address checks, bounded redirects and retries, response limits, per-host pacing, and conditional-request caching.
+- A 40-case fictional public regression suite, `GOVERNANCE.md`, `ADOPTERS.md`, and an opt-in Codex/API maintenance workflow with token-usage capture.
+
+### Fixed
+
+- `doctor.py --config` now fails readiness when the selected notification channel is missing required environment variables, without printing credential values; `run_radar.py --no-notify` remains usable.
+
+### Changed
+
+- Replaced the benchmark score badge with a case-count badge and narrowed syndication claims to exact fingerprints or explicit provenance labels.
+- Removed the unsupported claim that an official Skill validator is pinned in CI.
+
+### Security
+
+- Remote feed collection now requires HTTPS and blocks non-public destinations, oversized responses, cross-host redirects, and unbounded retry behavior.
 
 ## 0.2.0
 

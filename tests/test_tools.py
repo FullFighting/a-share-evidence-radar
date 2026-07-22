@@ -5,6 +5,8 @@ import sys
 import unittest
 import uuid
 from pathlib import Path
+from unittest import mock
+from urllib.error import HTTPError
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,11 +14,49 @@ SKILL = ROOT / "skills" / "monitor-a-share-events"
 FUSE = SKILL / "scripts" / "fuse_events.py"
 PUSH = SKILL / "scripts" / "push_alert.py"
 COLLECT = SKILL / "scripts" / "collect_feeds.py"
+COLLECT_SSE = SKILL / "scripts" / "collect_sse_disclosures.py"
+COLLECT_SZSE = SKILL / "scripts" / "collect_szse_disclosures.py"
 EVALUATE = SKILL / "scripts" / "evaluate_radar.py"
 DOCTOR = SKILL / "scripts" / "doctor.py"
 RUN = SKILL / "scripts" / "run_radar.py"
 VALIDATE = SKILL / "scripts" / "validate_config.py"
+PROPOSE = SKILL / "scripts" / "propose_regression.py"
 RUNTIME = ROOT / "tests" / ".runtime"
+FIXTURES = ROOT / "tests" / "fixtures"
+sys.path.insert(0, str(SKILL / "scripts"))
+import http_client  # noqa: E402
+
+
+class FakeResponse:
+    def __init__(self, body=b"{}", headers=None, url="https://example.com/feed"):
+        self.body = body
+        self.headers = headers or {"Content-Type": "application/json"}
+        self.url = url
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def read(self, limit):
+        return self.body[:limit]
+
+    def geturl(self):
+        return self.url
+
+
+class FakeOpener:
+    def __init__(self, outcomes):
+        self.outcomes = list(outcomes)
+        self.requests = []
+
+    def open(self, request, timeout):
+        self.requests.append(request)
+        outcome = self.outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
 
 
 class ToolTests(unittest.TestCase):
@@ -520,6 +560,249 @@ class ToolTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
 
+    def test_sse_adapter_contract_fixture(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(COLLECT_SSE),
+                "--fixture",
+                str(FIXTURES / "sse" / "valid.json"),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        event = json.loads(result.stdout)
+        self.assertEqual(event["source"], "上海证券交易所")
+        self.assertEqual(event["symbols"], ["600000"])
+        self.assertEqual(event["event_type"], "buyback")
+        self.assertTrue(event["url"].startswith("https://www.sse.com.cn/"))
+        self.assertTrue(event["evidence_origin"].startswith("sse-announcement:"))
+
+    def test_szse_adapter_contract_fixture(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(COLLECT_SZSE),
+                "--fixture",
+                str(FIXTURES / "szse" / "valid.json"),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        event = json.loads(result.stdout)
+        self.assertEqual(event["source"], "深圳证券交易所")
+        self.assertEqual(event["symbols"], ["000001"])
+        self.assertEqual(event["event_type"], "contract")
+        self.assertTrue(event["published_at"].endswith("+08:00"))
+        self.assertTrue(event["url"].startswith("https://disc.static.szse.cn/"))
+        self.assertTrue(event["evidence_origin"].startswith("szse-announcement:"))
+
+    def test_primary_adapters_reject_failed_contract_fixtures(self):
+        cases = (
+            (COLLECT_SSE, FIXTURES / "sse" / "missing-date.json", "publication time"),
+            (COLLECT_SSE, FIXTURES / "sse" / "malformed-envelope.json", "result array"),
+            (COLLECT_SSE, FIXTURES / "sse" / "external-url.json", "outside the adapter contract"),
+            (COLLECT_SZSE, FIXTURES / "szse" / "invalid-code.json", "six-digit"),
+            (COLLECT_SZSE, FIXTURES / "szse" / "malformed-envelope.json", "data array"),
+        )
+        for script, fixture, message in cases:
+            with self.subTest(fixture=fixture.name):
+                result = subprocess.run(
+                    [sys.executable, str(script), "--fixture", str(fixture)],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 2)
+                self.assertIn(message, result.stderr)
+
+    def test_primary_adapter_output_passes_registry_evidence_gate(self):
+        collected = subprocess.run(
+            [
+                sys.executable,
+                str(COLLECT_SSE),
+                "--fixture",
+                str(FIXTURES / "sse" / "valid.json"),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(collected.returncode, 0, collected.stderr)
+        event_path = self.runtime_path("sse-event.jsonl")
+        event_path.write_text(collected.stdout, encoding="utf-8")
+        watchlist_path = self.runtime_path("sse-watchlist.json")
+        watchlist_path.write_text(json.dumps({"symbols": {"600000": {}}}), encoding="utf-8")
+        fused = subprocess.run(
+            [
+                sys.executable,
+                str(FUSE),
+                "--events",
+                str(event_path),
+                "--watchlist",
+                str(watchlist_path),
+                "--source-registry",
+                str(SKILL / "assets" / "source-registry.official.json"),
+                "--now",
+                "2026-07-21T10:00:00+08:00",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(fused.returncode, 0, fused.stderr)
+        self.assertTrue(json.loads(fused.stdout)["cards"][0]["evidence_gate"])
+
+    def test_remote_feed_requires_https(self):
+        config_path = self.runtime_path("http-feed-config.json")
+        config_path.write_text(
+            json.dumps({"feeds": [{"location": "http://example.com/feed.xml"}]}),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [sys.executable, str(VALIDATE), "--config", str(config_path), "--format", "json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("remote collection requires HTTPS", result.stdout)
+
+    def test_http_client_blocks_non_public_addresses(self):
+        command = (
+            "import sys; "
+            f"sys.path.insert(0, {str(SKILL / 'scripts')!r}); "
+            "import http_client; "
+            "http_client.validate_url('https://127.0.0.1/x', allowed_hosts={'127.0.0.1'})"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", command],
+            capture_output=True,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("non-public address", result.stderr.decode("utf-8", errors="replace"))
+
+    def test_http_client_rejects_credential_like_query_parameters(self):
+        with self.assertRaisesRegex(ValueError, "credential-like query"):
+            http_client.validate_url(
+                "https://example.com/feed?token=do-not-cache",
+                allowed_hosts={"example.com"},
+                resolver=lambda *args, **kwargs: [],
+            )
+
+    def test_http_client_reuses_etag_cache_on_304(self):
+        first = FakeOpener(
+            [FakeResponse(b"cached-body", {"Content-Type": "application/json", "ETag": '"v1"'})]
+        )
+        not_modified = HTTPError(
+            "https://example.com/feed", 304, "Not Modified", {}, None
+        )
+        second = FakeOpener([not_modified])
+        metadata_path, body_path = http_client._cache_paths(
+            RUNTIME, "https://example.com/feed"
+        )
+        self.addCleanup(metadata_path.unlink, missing_ok=True)
+        self.addCleanup(body_path.unlink, missing_ok=True)
+        with mock.patch.object(http_client, "_public_addresses", return_value=["93.184.216.34"]), mock.patch.object(
+            http_client, "build_opener", side_effect=[first, second]
+        ):
+            body, _, cached = http_client.fetch_bytes(
+                "https://example.com/feed",
+                allowed_hosts={"example.com"},
+                cache_dir=RUNTIME,
+                min_interval=0,
+                retries=0,
+            )
+            self.assertEqual(body, b"cached-body")
+            self.assertFalse(cached)
+            body, _, cached = http_client.fetch_bytes(
+                "https://example.com/feed",
+                allowed_hosts={"example.com"},
+                cache_dir=RUNTIME,
+                min_interval=0,
+                retries=0,
+            )
+        self.assertEqual(body, b"cached-body")
+        self.assertTrue(cached)
+        self.assertEqual(second.requests[0].get_header("If-none-match"), '"v1"')
+
+    def test_http_client_retries_transient_status_once(self):
+        unavailable = HTTPError(
+            "https://example.com/feed", 503, "Unavailable", {"Retry-After": "0"}, None
+        )
+        opener = FakeOpener([unavailable, FakeResponse(b"ok")])
+        with mock.patch.object(http_client, "_public_addresses", return_value=["93.184.216.34"]), mock.patch.object(
+            http_client, "build_opener", return_value=opener
+        ), mock.patch.object(http_client.time, "sleep"):
+            body, _, cached = http_client.fetch_bytes(
+                "https://example.com/feed",
+                allowed_hosts={"example.com"},
+                min_interval=0,
+                retries=1,
+            )
+        self.assertEqual(body, b"ok")
+        self.assertFalse(cached)
+        self.assertEqual(len(opener.requests), 2)
+
+    def test_http_client_rejects_oversized_response(self):
+        opener = FakeOpener(
+            [FakeResponse(b"012345", {"Content-Type": "application/json", "Content-Length": "6"})]
+        )
+        with mock.patch.object(http_client, "_public_addresses", return_value=["93.184.216.34"]), mock.patch.object(
+            http_client, "build_opener", return_value=opener
+        ):
+            with self.assertRaisesRegex(ValueError, "response exceeds"):
+                http_client.fetch_bytes(
+                    "https://example.com/feed",
+                    allowed_hosts={"example.com"},
+                    max_bytes=5,
+                    min_interval=0,
+                    retries=0,
+                )
+
+    def test_regression_proposal_defaults_to_api_preview_and_redacts_secrets(self):
+        issue_path = self.runtime_path("public-issue.json")
+        issue_path.write_text(
+            json.dumps(
+                {
+                    "number": 99,
+                    "title": "Parser misses one disclosure",
+                    "body": "token=do-not-print https://example.com/private-secret-path?token=hidden",
+                    "url": "https://github.com/example/repo/issues/99",
+                }
+            ),
+            encoding="utf-8",
+        )
+        environment = os.environ.copy()
+        environment["OPENAI_API_KEY"] = "also-do-not-print"
+        result = subprocess.run(
+            [sys.executable, str(PROPOSE), "--issue", str(issue_path)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=environment,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = json.loads(result.stdout)
+        self.assertEqual(output["mode"], "preview_only")
+        self.assertNotIn("do-not-print", result.stdout)
+        self.assertNotIn("private-secret-path", result.stdout)
+        self.assertNotIn("also-do-not-print", result.stdout)
+
     def test_example_config_passes_offline_validation(self):
         result = subprocess.run(
             [
@@ -631,6 +914,87 @@ class ToolTests(unittest.TestCase):
         output = json.loads(result.stdout)
         self.assertTrue(output["ready"])
         self.assertTrue(any(item["name"] == "config.feed[1]" for item in output["checks"]))
+
+    def test_doctor_requires_configured_webhook_environment(self):
+        config = json.loads(
+            (SKILL / "assets" / "examples" / "radar-config.json").read_text(encoding="utf-8")
+        )
+        config["feeds"][0]["location"] = str(SKILL / "assets" / "examples" / "feed.xml")
+        config["watchlist"] = str(SKILL / "assets" / "examples" / "watchlist.json")
+        config["source_registry"] = str(
+            SKILL / "assets" / "examples" / "source-registry.json"
+        )
+        config["notification"] = {"channel": "feishu"}
+        config_path = self.runtime_path("doctor-feishu-config.json")
+        config_path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
+        environment = os.environ.copy()
+        environment.pop("FEISHU_WEBHOOK_URL", None)
+        result = subprocess.run(
+            [sys.executable, str(DOCTOR), "--config", str(config_path), "--format", "json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=environment,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        output = json.loads(result.stdout)
+        check = next(
+            item for item in output["checks"] if item["name"] == "config.notification.environment"
+        )
+        self.assertEqual(check["status"], "fail")
+        self.assertEqual(check["detail"], "missing environment variable(s): FEISHU_WEBHOOK_URL")
+
+    def test_doctor_requires_both_telegram_environment_variables(self):
+        config = json.loads(
+            (SKILL / "assets" / "examples" / "radar-config.json").read_text(encoding="utf-8")
+        )
+        config["feeds"][0]["location"] = str(SKILL / "assets" / "examples" / "feed.xml")
+        config["watchlist"] = str(SKILL / "assets" / "examples" / "watchlist.json")
+        config["source_registry"] = str(
+            SKILL / "assets" / "examples" / "source-registry.json"
+        )
+        config["notification"] = {"channel": "telegram"}
+        config_path = self.runtime_path("doctor-telegram-config.json")
+        config_path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
+        environment = os.environ.copy()
+        environment["TELEGRAM_BOT_TOKEN"] = "not-printed"
+        environment.pop("TELEGRAM_CHAT_ID", None)
+        result = subprocess.run(
+            [sys.executable, str(DOCTOR), "--config", str(config_path), "--format", "json"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=environment,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("TELEGRAM_CHAT_ID", result.stdout)
+        self.assertNotIn("not-printed", result.stdout)
+
+    def test_run_radar_no_notify_does_not_require_notification_environment(self):
+        config = json.loads(
+            (SKILL / "assets" / "examples" / "radar-config.json").read_text(encoding="utf-8")
+        )
+        config["feeds"][0]["location"] = str(SKILL / "assets" / "examples" / "feed.xml")
+        config["watchlist"] = str(SKILL / "assets" / "examples" / "watchlist.json")
+        config["source_registry"] = str(
+            SKILL / "assets" / "examples" / "source-registry.json"
+        )
+        config["notification"] = {"channel": "feishu"}
+        config_path = self.runtime_path("no-notify-config.json")
+        config_path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
+        environment = os.environ.copy()
+        environment.pop("FEISHU_WEBHOOK_URL", None)
+        result = subprocess.run(
+            [sys.executable, str(RUN), "--config", str(config_path), "--no-notify"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=environment,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_one_command_pipeline_uses_self_contained_config(self):
         result = subprocess.run(

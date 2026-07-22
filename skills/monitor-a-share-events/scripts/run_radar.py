@@ -81,7 +81,15 @@ def collect_events(collect, config: dict[str, Any], base: Path) -> list[dict[str
         registry = collect.load_source_registry(
             resolve_location(base, str(registry_value)) if registry_value else None
         )
-        data, content_type = collect.read_input(location, float(feed.get("timeout", 15.0)))
+        cache_value = feed.get("cache_dir", config.get("cache_dir"))
+        data, content_type = collect.read_input(
+            location,
+            float(feed.get("timeout", 15.0)),
+            retries=int(feed.get("retries", 2)),
+            min_interval=float(feed.get("min_interval", 1.0)),
+            max_bytes=int(feed.get("max_bytes", 5_000_000)),
+            cache_dir=resolve_location(base, str(cache_value)) if cache_value else None,
+        )
         discovered_source, items = collect.parse_feed(data, content_type)
         source = (
             str(feed.get("source", "")).strip()

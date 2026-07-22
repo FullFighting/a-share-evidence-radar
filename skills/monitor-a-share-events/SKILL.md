@@ -9,6 +9,8 @@ Create high-signal alerts instead of forwarding every headline. Require either o
 
 Resolve `SKILL_ROOT` as the directory containing this `SKILL.md`. Resolve bundled `scripts/`, `references/`, and `assets/` relative to `SKILL_ROOT`; do not assume the current working directory is the skill directory. Use absolute paths when invoking scripts from another directory.
 
+Resolve a Python 3.10+ launcher before running the workflow. Try `python`, `py -3.10`, and `python3`, and reject Microsoft Store stubs that do not report a version. In Codex desktop, call the workspace-dependency resolver when available and use its bundled Python executable. If no compliant interpreter is available, stop and report the missing prerequisite; do not infer an output from fixture contents. On Windows, run subprocesses with UTF-8 mode (`-X utf8`) or explicitly decode UTF-8 before treating Chinese output as corrupted.
+
 ## Core workflow
 
 1. Establish scope.
@@ -16,6 +18,7 @@ Resolve `SKILL_ROOT` as the directory containing this `SKILL.md`. Resolve bundle
    - If details are absent, default to a preview-only run for a small supplied watchlist. Do not invent holdings.
 2. Validate configuration before network access.
    - Run `scripts/validate_config.py --config <config>` for an offline check of paths, parameter ranges, source-registry shape, and accidentally embedded credentials.
+   - Run `scripts/doctor.py --config <config>` before notification preview. It fails readiness when the configured channel's environment variables are missing, but never prints their values.
    - Fix every failure before collecting. Review warnings instead of silently ignoring them.
    - Keep webhook URLs, bot tokens, chat IDs, cookies, and API keys in environment variables, never in the config.
 3. Plan sources.
@@ -28,6 +31,7 @@ Resolve `SKILL_ROOT` as the directory containing this `SKILL.md`. Resolve bundle
    - Preserve timestamps, canonical URLs, source identity, source tier, affected symbols, and factual wording.
    - Separate facts from interpretation. Mark rumors and denials explicitly.
    - For RSS, Atom, or JSON Feed inputs, run `scripts/collect_feeds.py`. Treat its output as normalized observations, not verified facts.
+   - For official exchange disclosure metadata, run `scripts/collect_sse_disclosures.py` or `scripts/collect_szse_disclosures.py`, then fuse with `assets/source-registry.official.json`.
 5. Fuse and score.
    - Run `scripts/fuse_events.py` to cluster duplicates, apply the evidence gate, score relevance and materiality, and create alert cards.
    - Inspect held and suppressed counts. Do not lower the threshold merely to produce output.
@@ -105,6 +109,25 @@ python scripts/collect_feeds.py `
 
 For an explicit `https://` feed URL, respect its terms and polling limits. A command-line `--source-tier` is an unverified operator assertion; Tier 1 is downgraded unless a source registry verifies it and the event has a canonical reference. A parsed feed item does not become authoritative merely because parsing succeeded.
 
+Remote adapters use `scripts/http_client.py`: require HTTPS port 443, reject credentials and non-public destinations, restrict redirect hosts, cap response size, pace requests per host, retry only bounded transient failures, and reuse ETag/Last-Modified responses when a cache directory is enabled. Do not weaken these controls to make an incompatible source pass.
+
+## Collect official disclosure metadata
+
+Use the primary adapters only for public metadata endpoints and keep the official registry separate from fictional examples.
+
+```powershell
+python scripts/collect_sse_disclosures.py --symbol 600000 --output sse-events.jsonl
+python scripts/collect_szse_disclosures.py --symbol 000001 --output szse-events.jsonl
+python scripts/fuse_events.py `
+  --events sse-events.jsonl `
+  --source-registry assets/source-registry.official.json `
+  --format markdown
+```
+
+Before changing an adapter, run its offline valid fixture and every failure fixture under `tests/fixtures/<source>/`. Preserve required symbol, title, publication time, canonical HTTPS URL, and stable evidence origin. Treat an upstream schema change as a failed contract, not an empty successful collection.
+
+Fixture freshness changes with wall-clock time. For a deterministic offline reproduction, pass an explicit `--now` to `fuse_events.py` that matches the test scenario, and report that evaluation time with the result. Never rewind `--now` when presenting a current monitoring result.
+
 ## Diagnose and evaluate
 
 Validate a user config without fetching remote feeds:
@@ -120,6 +143,8 @@ python scripts/doctor.py --config radar-config.json
 ```
 
 Run `scripts/evaluate_radar.py` against the public benchmark after changing clustering, evidence, relevance, conflict, or freshness rules. Do not claim quality improvements without adding a case that demonstrates them.
+
+Automatic duplicate-origin handling is deliberately narrow: identical normalized content fingerprints and matching explicit `evidence_origin` values collapse. Rewritten syndication without provenance labels may remain separate; never claim universal semantic syndication detection.
 
 ## Turn real failures into public tests
 

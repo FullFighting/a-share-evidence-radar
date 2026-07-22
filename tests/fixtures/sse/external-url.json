@@ -1,0 +1,11 @@
+{
+  "result": [
+    {
+      "SECURITY_CODE": "600000",
+      "TITLE": "示例沪市公司公告",
+      "SSEDATE": "2026-07-21",
+      "BULLETIN_ID": "sse-fixture-bad-002",
+      "URL": "https://mirror.example/untrusted.pdf"
+    }
+  ]
+}

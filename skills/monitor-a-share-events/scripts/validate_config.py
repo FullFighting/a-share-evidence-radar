@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -13,6 +14,14 @@ from urllib.parse import parse_qsl, urlparse
 
 
 SUPPORTED_CHANNELS = {"bark", "dingtalk", "feishu", "telegram", "webhook", "wecom"}
+NOTIFICATION_ENV = {
+    "bark": ("BARK_URL",),
+    "dingtalk": ("DINGTALK_WEBHOOK_URL",),
+    "feishu": ("FEISHU_WEBHOOK_URL",),
+    "telegram": ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"),
+    "webhook": ("WEBHOOK_URL",),
+    "wecom": ("WECOM_WEBHOOK_URL",),
+}
 SENSITIVE_KEY = re.compile(
     r"(?:^|_)(?:api_?key|authorization|chat_?id|cookie|password|secret|signature|token|webhook_?url)(?:$|_)",
     re.IGNORECASE,
@@ -70,7 +79,7 @@ def check_location(base: Path, value: str, name: str) -> dict[str, str]:
                 "remote URL contains a credential-like query key: " + ", ".join(sensitive_query),
             )
         if parsed.scheme == "http":
-            return result(name, "warn", "plain HTTP feed; prefer HTTPS when the source supports it")
+            return result(name, "fail", "remote collection requires HTTPS")
         return result(name, "pass", f"remote HTTPS feed: {parsed.hostname or 'unknown host'}")
     if parsed.scheme:
         return result(name, "fail", f"unsupported location scheme: {parsed.scheme}")
@@ -158,7 +167,9 @@ def check_output_path(base: Path, value: Any, name: str) -> dict[str, str] | Non
     return result(name, "pass", f"local path: {path.name}")
 
 
-def validate_config(path: Path) -> list[dict[str, str]]:
+def validate_config(
+    path: Path, *, require_notification_env: bool = False
+) -> list[dict[str, str]]:
     checks: list[dict[str, str]] = []
     if not path.is_file():
         return [result("config", "fail", f"file not found: {path}")]
@@ -256,6 +267,20 @@ def validate_config(path: Path) -> list[dict[str, str]]:
                     channel or "missing",
                 )
             )
+            if channel in NOTIFICATION_ENV:
+                required = NOTIFICATION_ENV[channel]
+                missing = [name for name in required if not os.getenv(name)]
+                checks.append(
+                    result(
+                        "notification.environment",
+                        "fail" if missing and require_notification_env else (
+                            "warn" if missing else "pass"
+                        ),
+                        "missing environment variable(s): " + ", ".join(missing)
+                        if missing
+                        else "required environment variables are present",
+                    )
+                )
 
     for name in ("output", "state"):
         path_check = check_output_path(path.parent, config.get(name), name)

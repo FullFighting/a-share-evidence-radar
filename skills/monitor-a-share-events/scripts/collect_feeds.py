@@ -14,8 +14,9 @@ from html import unescape
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
 from xml.etree import ElementTree
+
+import http_client
 
 
 EVENT_TERMS = {
@@ -40,7 +41,7 @@ def parse_args() -> argparse.Namespace:
         "--feed",
         action="append",
         required=True,
-        help="Local feed file or explicit http(s) feed URL; repeat for multiple feeds",
+        help="Local feed file or explicit HTTPS feed URL; repeat for multiple feeds",
     )
     parser.add_argument("--watchlist", help="Optional watchlist JSON used for symbol mapping")
     parser.add_argument("--source", help="Override the source name for all inputs")
@@ -51,6 +52,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--max-items", type=int, default=100)
     parser.add_argument("--timeout", type=float, default=15.0)
+    parser.add_argument("--retries", type=int, default=2)
+    parser.add_argument("--min-interval", type=float, default=1.0)
+    parser.add_argument("--max-bytes", type=int, default=5_000_000)
+    parser.add_argument("--cache-dir", help="Optional local directory for ETag/Last-Modified cache")
     parser.add_argument("--output", help="Write JSONL to this file instead of stdout")
     return parser.parse_args()
 
@@ -82,18 +87,31 @@ def normalize_time(value: Any) -> str:
     return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def read_input(location: str, timeout: float) -> tuple[bytes, str]:
+def read_input(
+    location: str,
+    timeout: float,
+    *,
+    retries: int = 2,
+    min_interval: float = 1.0,
+    max_bytes: int = 5_000_000,
+    cache_dir: str | None = None,
+) -> tuple[bytes, str]:
     parsed = urlparse(location)
     if parsed.scheme in {"http", "https"}:
-        request = Request(
+        host = str(parsed.hostname or "").lower()
+        body, content_type, _ = http_client.fetch_bytes(
             location,
+            allowed_hosts={host},
             headers={
-                "Accept": "application/feed+json, application/atom+xml, application/rss+xml, application/xml, text/xml",
-                "User-Agent": "a-share-evidence-radar/1 (+https://github.com/)",
+                "Accept": "application/feed+json, application/atom+xml, application/rss+xml, application/xml, text/xml"
             },
+            timeout=timeout,
+            retries=retries,
+            min_interval=min_interval,
+            max_bytes=max_bytes,
+            cache_dir=Path(cache_dir) if cache_dir else None,
         )
-        with urlopen(request, timeout=timeout) as response:
-            return response.read(5_000_000), response.headers.get("Content-Type", "")
+        return body, content_type
     path = Path(location)
     if parsed.scheme and not path.is_absolute():
         raise ValueError(f"unsupported feed scheme: {parsed.scheme}")
@@ -287,7 +305,14 @@ def main() -> int:
         registry = load_source_registry(args.source_registry)
         events: list[dict[str, Any]] = []
         for location in args.feed:
-            data, content_type = read_input(location, args.timeout)
+            data, content_type = read_input(
+                location,
+                args.timeout,
+                retries=args.retries,
+                min_interval=args.min_interval,
+                max_bytes=args.max_bytes,
+                cache_dir=args.cache_dir,
+            )
             discovered_source, items = parse_feed(data, content_type)
             source = args.source or discovered_source or urlparse(location).hostname or Path(location).stem
             source_tier, tier_verified, tier_basis = resolve_source_tier(

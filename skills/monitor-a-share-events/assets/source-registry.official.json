@@ -1,0 +1,18 @@
+{
+  "sources": {
+    "上海证券交易所": {
+      "tier": 1,
+      "hosts": ["www.sse.com.cn", "static.sse.com.cn"],
+      "evidence_origin_prefixes": ["sse-announcement:"],
+      "allow_local": false,
+      "note": "Official SSE public disclosure metadata adapter"
+    },
+    "深圳证券交易所": {
+      "tier": 1,
+      "hosts": ["www.szse.cn", "disc.static.szse.cn"],
+      "evidence_origin_prefixes": ["szse-announcement:"],
+      "allow_local": false,
+      "note": "Official SZSE public disclosure metadata adapter"
+    }
+  }
+}

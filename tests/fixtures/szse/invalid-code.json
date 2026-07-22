@@ -1,0 +1,11 @@
+{
+  "data": [
+    {
+      "id": "szse-fixture-bad-001",
+      "secCode": "not-a-symbol",
+      "title": "示例深市公司公告",
+      "publishTime": "2026-07-21 09:30:00+08:00",
+      "attachPath": "/disc/disk03/finalpage/2026-07-21/example.PDF"
+    }
+  ]
+}

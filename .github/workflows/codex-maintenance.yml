@@ -1,0 +1,56 @@
+name: codex-maintenance-preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Public issue number to triage
+        required: true
+        type: number
+      call_api:
+        description: Explicitly spend API credits after reviewing the issue
+        required: true
+        default: false
+        type: boolean
+      model:
+        description: Responses API model
+        required: true
+        default: gpt-5.6-terra
+        type: string
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  regression-proposal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Read the selected public issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}" --jq '{number, title, body, url: .html_url}' > issue.json
+      - name: Build preview without API credentials
+        if: ${{ !inputs.call_api }}
+        env:
+          MODEL: ${{ inputs.model }}
+        run: python skills/monitor-a-share-events/scripts/propose_regression.py --issue issue.json --model "$MODEL" --output regression-proposal.json
+      - name: Call the Responses API after explicit opt-in
+        if: ${{ inputs.call_api }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MODEL: ${{ inputs.model }}
+        run: python skills/monitor-a-share-events/scripts/propose_regression.py --issue issue.json --model "$MODEL" --call-api --output regression-proposal.json
+      - name: Publish reviewable artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: regression-proposal-issue-${{ inputs.issue_number }}
+          path: regression-proposal.json
+          if-no-files-found: error
+          retention-days: 30
