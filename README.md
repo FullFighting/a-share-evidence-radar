@@ -10,7 +10,7 @@
   <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white">
   <img alt="Zero dependencies" src="https://img.shields.io/badge/runtime-zero_dependencies-16a085">
   <a href="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml"><img alt="CI" src="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml/badge.svg"></a>
-  <img alt="Public benchmark" src="https://img.shields.io/badge/benchmark-10%2F10-2ea44f">
+  <img alt="Public benchmark" src="https://img.shields.io/badge/benchmark-40_cases-2563eb">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -20,7 +20,7 @@ An evidence-first Codex Skill that turns company disclosures, regulator updates,
 
 > Registry-verified primary evidence or two independent sources → watchlist relevance → no credible contradiction → fresh timestamp → alert eligibility.
 
-It is not another headline forwarder. The radar clusters duplicate coverage, prevents syndicated copies from masquerading as independent confirmation, separates price reaction from causal claims, and defaults to a redacted delivery preview.
+It is not another headline forwarder. The radar clusters likely duplicate coverage, collapses exact-content copies and explicitly labeled shared origins, separates price reaction from causal claims, and defaults to a redacted delivery preview. Rewritten syndication is not claimed to be detected automatically without provenance labels.
 
 ## What an alert looks like
 
@@ -60,13 +60,13 @@ python skills/monitor-a-share-events/scripts/run_radar.py \
 python skills/monitor-a-share-events/scripts/evaluate_radar.py
 ```
 
-Expected results: `READY` from the doctor and `10/10 (100.0%)` from the public benchmark. All bundled events are fictional and safe to reproduce.
+Expected results: `READY` from the doctor and `40/40 (100.0%)` from the current public regression suite. This score means only that the published fictional cases match their expected behavior; it is not market accuracy.
 
 The config validator performs no network request. Run it before using a real feed; it checks local paths, parameter ranges, source-registry shape, and credential-like values accidentally placed in JSON.
 
 ## Install as a Codex Skill
 
-The [official Codex Skill documentation](https://learn.chatgpt.com/docs/build-skills) says repository skills belong in `$REPO_ROOT/.agents/skills` and personal skills in `$HOME/.agents/skills`. Copy or symlink the `skills/monitor-a-share-events` directory there. Codex detects changes automatically; restart it if the skill does not appear. This repository also includes `.codex-plugin/plugin.json` for plugin distribution.
+Copy or symlink `skills/monitor-a-share-events` into the repository or personal Skills directory used by your Codex setup. The [OpenAI Skills overview](https://help.openai.com/en/articles/20001066) describes Skills as portable workflows supported in Codex; installation surfaces can vary by account and workspace. This repository also includes `.codex-plugin/plugin.json` for plugin distribution.
 
 Then invoke it explicitly:
 
@@ -97,7 +97,14 @@ Every card exposes `score_breakdown`, `evidence_gate`, `relevance_gate`, `confli
 
 ## Source collection
 
-`collect_feeds.py` supports local files and explicit `http(s)` RSS, Atom, and JSON Feed URLs. It does not log in, bypass CAPTCHAs, scrape paywalls, or interpret successful parsing as verified truth.
+`collect_feeds.py` supports local files and explicit HTTPS RSS, Atom, and JSON Feed URLs. `collect_sse_disclosures.py` and `collect_szse_disclosures.py` normalize official exchange disclosure metadata. Each primary adapter has contract fixtures and failure fixtures; live endpoint availability is not treated as a correctness guarantee.
+
+Remote collection uses an HTTPS-only client with public-address checks, a response-size cap, bounded redirects and retries, per-host pacing, and optional ETag/Last-Modified caching. It does not log in, bypass CAPTCHAs, scrape paywalls, or interpret successful parsing as verified truth.
+
+```bash
+python skills/monitor-a-share-events/scripts/collect_sse_disclosures.py --symbol 600000 --output sse-events.jsonl
+python skills/monitor-a-share-events/scripts/collect_szse_disclosures.py --symbol 000001 --output szse-events.jsonl
+```
 
 `--source-tier` is only an operator assertion. Fusion ignores an event-file `source_tier_verified` flag and independently checks the registry plus an allowed canonical `https` URL or stable ID. The collector collapses exact cross-site copies through content fingerprints; rewritten syndication still needs a shared `evidence_origin`, and recycled news should preserve the underlying `event_at`. See the [event contract](skills/monitor-a-share-events/references/event-schema.md) and [source policy](skills/monitor-a-share-events/references/source-policy.md).
 
@@ -107,7 +114,7 @@ Feishu, DingTalk, WeCom, Telegram, Bark, and generic Webhooks are supported. Wit
 
 ## Quality and contribution
 
-The [public benchmark](skills/monitor-a-share-events/references/benchmark-cases.json) covers authoritative disclosures, independent corroboration, single-source rumors, syndicated copies, conflicting claims, irrelevant official news, stale events, future timestamps, forged Tier 1 flags, and recycled old events.
+The public suite combines [core cases](skills/monitor-a-share-events/references/benchmark-cases.json) with [edge cases](skills/monitor-a-share-events/references/benchmark-edge-cases.json). Its 40 fictional cases cover authority, corroboration, duplicate-origin counting, conflicts, relevance, timestamp boundaries, forged Tier 1 claims, republication, event types, and exact-content fingerprints.
 
 ```bash
 python -m unittest discover -s tests -v
@@ -120,16 +127,23 @@ The benchmark score describes only the published cases, not real-market accuracy
 
 We are looking for five real testers who maintain Codex workflows, research A-share public information, or build feed/event integrations. The test takes about 15 minutes, is offline by default, and must not include private holdings or credentials. See the [beta guide](docs/beta-testing.md) and use the structured **Beta feedback** Issue form.
 
+Verified adoption is recorded in [ADOPTERS.md](ADOPTERS.md); project decisions and release responsibility are documented in [GOVERNANCE.md](GOVERNANCE.md). Empty evidence stays empty rather than being replaced with estimates.
+
+## Codex maintenance evidence
+
+The manually dispatched `codex-maintenance-preview` workflow can turn one reviewed public Issue into a regression proposal. It is preview-only unless `call_api` is explicitly enabled, stores no API response by default, uploads a reviewable artifact, and records returned token usage. Human acceptance and time-saved measurements belong in [docs/maintenance-metrics.md](docs/maintenance-metrics.md); no usage claim is made before measured runs exist.
+
 ## Roadmap
 
 - [x] Deterministic clustering, scoring, and four quality gates
 - [x] RSS / Atom / JSON Feed adapter
 - [x] Six delivery channels, cooldown state, doctor, and benchmark
-- [ ] Contract-tested primary-disclosure adapters
+- [x] Contract-tested SSE and SZSE primary-disclosure adapters
 - [ ] Market-reaction adapters that avoid causal overclaiming
 - [ ] Community-maintained false-positive and false-negative corpus
 - [x] Codex plugin manifest and standard distribution layout
-- [ ] Public marketplace installation and versioned releases
+- [x] Versioned GitHub releases
+- [ ] Public marketplace installation
 
 ## Boundaries
 

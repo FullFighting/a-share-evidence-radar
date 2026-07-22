@@ -13,7 +13,10 @@ from typing import Any
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CASES = SKILL_ROOT / "references" / "benchmark-cases.json"
+DEFAULT_CASES = (
+    SKILL_ROOT / "references" / "benchmark-cases.json",
+    SKILL_ROOT / "references" / "benchmark-edge-cases.json",
+)
 DEFAULT_REGISTRY = SKILL_ROOT / "assets" / "examples" / "source-registry.json"
 
 
@@ -74,14 +77,24 @@ def evaluate_case(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the public evidence-radar benchmark.")
-    parser.add_argument("--cases", default=str(DEFAULT_CASES))
+    parser.add_argument(
+        "--cases",
+        action="append",
+        help="Benchmark JSON array; repeat to combine files (defaults to the public suite)",
+    )
     parser.add_argument("--source-registry", default=str(DEFAULT_REGISTRY))
     parser.add_argument("--format", choices=("text", "json"), default="text")
     args = parser.parse_args()
     try:
-        cases = json.loads(Path(args.cases).read_text(encoding="utf-8-sig"))
-        if not isinstance(cases, list):
-            raise ValueError("benchmark file must contain a JSON array")
+        cases: list[dict[str, Any]] = []
+        for case_path in args.cases or [str(path) for path in DEFAULT_CASES]:
+            loaded = json.loads(Path(case_path).read_text(encoding="utf-8-sig"))
+            if not isinstance(loaded, list):
+                raise ValueError(f"benchmark file must contain a JSON array: {case_path}")
+            cases.extend(loaded)
+        case_ids = [str(case.get("id", "")) for case in cases if isinstance(case, dict)]
+        if len(case_ids) != len(set(case_ids)):
+            raise ValueError("benchmark case ids must be unique")
         fuse = load_fuse_module()
         registry = fuse.load_source_registry(args.source_registry)
         results = [evaluate_case(fuse, case, registry) for case in cases]

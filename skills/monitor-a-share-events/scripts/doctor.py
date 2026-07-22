@@ -90,7 +90,9 @@ def main() -> int:
     if args.config:
         try:
             validator = load_config_validator()
-            config_checks = validator.validate_config(Path(args.config).resolve())
+            config_checks = validator.validate_config(
+                Path(args.config).resolve(), require_notification_env=True
+            )
             checks.extend(
                 {
                     "name": f"config.{item['name']}",

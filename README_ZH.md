@@ -11,7 +11,7 @@
   <img alt="Standard library only" src="https://img.shields.io/badge/runtime-zero_dependencies-16a085">
   <img alt="Codex Skill" src="https://img.shields.io/badge/Codex-Agent_Skill-111827">
   <a href="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml"><img alt="CI" src="https://github.com/FullFighting/a-share-evidence-radar/actions/workflows/validate.yml/badge.svg"></a>
-  <img alt="Public benchmark" src="https://img.shields.io/badge/benchmark-10%2F10-2ea44f">
+  <img alt="Public benchmark" src="https://img.shields.io/badge/benchmark-40_cases-2563eb">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -25,7 +25,7 @@
 
 # A股证据链事件雷达
 
-把公告、监管披露、财经新闻与盘中异动融合成一张有来源、有反证、有推送理由的事件卡。它解决的不是“消息不够多”，而是**重复转载、传闻混入、因果乱配和自选股噪声太多**。
+把公告、监管披露、财经新闻与盘中异动融合成一张有来源、有反证、有推送理由的事件卡。它解决的不是“消息不够多”，而是**重复转载、传闻混入、因果乱配和自选股噪声太多**。自动去重只覆盖精确内容指纹和显式标注的共同来源；没有来源标注时，不声称能自动识别所有改写转载。
 
 > 注册表验证的一手来源或双重独立印证 → 自选股相关 → 无可信冲突 → 时间有效 → 才有资格推送。
 
@@ -74,7 +74,7 @@ python skills/monitor-a-share-events/scripts/run_radar.py `
 python skills/monitor-a-share-events/scripts/evaluate_radar.py
 ```
 
-期望结果：自检显示 `READY`，公开基准显示 `10/10 (100.0%)`。示例全部为虚构内容，便于安全复现。
+期望结果：自检显示 `READY`，当前公开回归套件显示 `40/40 (100.0%)`。这只表示 40 个公开虚构案例符合预期，不代表真实市场准确率。
 
 已有标准 JSON/JSONL 事件时，可直接运行：
 
@@ -92,7 +92,7 @@ python skills/monitor-a-share-events/scripts/fuse_events.py `
 
 ## 安装为 Codex Skill
 
-根据 [Codex 官方 Skill 文档](https://learn.chatgpt.com/docs/build-skills)，仓库级 Skill 放在 `$REPO_ROOT/.agents/skills`，个人级 Skill 放在 `$HOME/.agents/skills`。你可以复制或软链接本仓库中的 `skills/monitor-a-share-events` 目录；Codex 会自动检测变更，未出现时重启 Codex。本仓库也已包含 `.codex-plugin/plugin.json`，可作为插件分发。
+将 `skills/monitor-a-share-events` 复制或软链接到你的 Codex 配置所使用的仓库级或个人级 Skills 目录。[OpenAI Skills 概览](https://help.openai.com/en/articles/20001066) 将 Skill 说明为可移植且受 Codex 支持的工作流；具体安装入口可能因账号和工作区而异。本仓库也包含 `.codex-plugin/plugin.json`，可作为插件分发。
 
 ```powershell
 # 仓库级安装示例
@@ -131,7 +131,9 @@ flowchart LR
 
 ## 接入自己的来源
 
-`collect_feeds.py` 支持本地文件和用户明确提供的 `http(s)` RSS、Atom、JSON Feed。它不登录、不绕过验证码、不抓取付费墙，也不会把“解析成功”当成“事实已证实”。
+`collect_feeds.py` 支持本地文件和用户明确提供的 HTTPS RSS、Atom、JSON Feed；`collect_sse_disclosures.py` 与 `collect_szse_disclosures.py` 分别归一化上交所、深交所的一手披露元数据。两者均配有契约和失败 fixture，但不把公开端点可访问性等同于正确性保证。
+
+远程采集统一启用 HTTPS、公网地址校验、响应体上限、有限跳转与重试、按主机限速，以及可选的 ETag/Last-Modified 缓存。它不登录、不绕过验证码、不抓取付费墙，也不会把“解析成功”当成“事实已证实”。
 
 ```powershell
 python skills/monitor-a-share-events/scripts/collect_feeds.py `
@@ -158,18 +160,24 @@ python skills/monitor-a-share-events/scripts/push_alert.py `
 
 ## 公开评测与质量承诺
 
-[benchmark-cases.json](skills/monitor-a-share-events/references/benchmark-cases.json) 当前覆盖：权威公告、独立信源印证、单一传闻、转载冒充多源、确认/否认冲突、无关权威消息、过期旧闻、未来时间戳、伪造 Tier 1，以及旧闻重新发布。修改聚类、评分或四道门规则时，必须新增或更新对应案例。
+公开套件由[核心案例](skills/monitor-a-share-events/references/benchmark-cases.json)和[边界案例](skills/monitor-a-share-events/references/benchmark-edge-cases.json)组成，共 40 个虚构案例，覆盖权威来源、独立印证、共同来源计数、冲突、相关性、时间边界、伪造 Tier 1、旧闻重发、事件类型和精确内容指纹。
 
 ```powershell
 python -m unittest discover -s tests -v
 python skills/monitor-a-share-events/scripts/evaluate_radar.py
 ```
 
-“10/10”只代表当前公开案例全部符合预期，不代表真实市场上的准确率。欢迎提交匿名化失败案例，让评测集比宣传数字更有价值。
+“40/40”只代表当前公开案例全部符合预期，不代表真实市场准确率。欢迎提交匿名化失败案例，让评测集比宣传数字更有价值。
 
 ## 早期 Beta 试用
 
 项目正在寻找 5 位真实试用者：Codex 工作流维护者、A 股公开信息研究者，或 Feed/事件数据集成开发者。测试约 15 分钟，默认离线、默认不发送，也不应提交真实持仓或任何密钥。请阅读 [Beta 测试说明](docs/beta-testing.md)，并使用结构化的 **Beta feedback** Issue 模板提交反馈。
+
+已核验的采用证据记录在 [ADOPTERS.md](ADOPTERS.md)，决策和发布责任记录在 [GOVERNANCE.md](GOVERNANCE.md)。没有真实证据时保持为空，不用估算值补齐。
+
+## Codex 维护证据
+
+`codex-maintenance-preview` 工作流可手工选择一个已审核的公开 Issue，生成回归建议。只有显式启用 `call_api` 才会调用 API；输出以 artifact 供人工复核，并记录 API 返回的 token 用量。人工接受率与节约时间按 [docs/maintenance-metrics.md](docs/maintenance-metrics.md) 口径记录，在真实运行前不作任何成效声明。
 
 ## 路线图
 
@@ -177,11 +185,12 @@ python skills/monitor-a-share-events/scripts/evaluate_radar.py
 - [x] RSS / Atom / JSON Feed 通用采集适配器
 - [x] 飞书、钉钉、企微、Telegram、Bark、通用 Webhook
 - [x] 去重状态、冷却窗口、离线自检、公开评测
-- [ ] 合规的一手披露来源适配器与契约测试
+- [x] 上交所、深交所一手披露适配器与契约测试
 - [ ] 盘中行情观察适配器（只描述反应，不生成伪因果）
 - [ ] 社区维护的匿名化误报 / 漏报评测集
 - [x] Codex 插件清单与标准分发结构
-- [ ] 公开市场的一键安装与版本发布
+- [x] GitHub 版本化 Release
+- [ ] 公开市场的一键安装
 
 ## 参与贡献
 
